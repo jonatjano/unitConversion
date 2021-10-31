@@ -1,15 +1,31 @@
-class Unit {
+export default class Unit {
+	static #getSubModuleUrl(subModuleName) {
+		const url = new URL(import.meta.url)
+		url.pathname = `/${subModuleName}.js`
+		return url
+	}
+	static registerUnitFromModule(modulePath) {
+		return import(modulePath)
+			.then(module => module.default(Unit))
+	}
+	static registerSIBaseUnits() {
+		return this.registerUnitFromModule(this.#getSubModuleUrl("SIBaseUnits"))
+	}
+	static registerSIDerivedUnits() {
+		return this.registerUnitFromModule(this.#getSubModuleUrl("SIDerivedUnits"))
+	}
+
 	/**
 	 * @type {number}
-	*/
+	 */
 	value = 1
 	/**
 	 * @type {Array<{unit: class extends Unit, ?dividing: boolean}>}
-	*/
+	 */
 	static COMPONENTS = []
 	/**
 	 * @type {Map<class extends Unit, number => number>}
-	*/
+	 */
 	static CONVERSION
 
 	static BIGGER_DECIMAL_UNITS = [
@@ -24,10 +40,10 @@ class Unit {
 		{name: "zetta", symbol: "Z", factor: 1e21},
 		{name: "yotta", symbol: "Y", factor: 1e24}
 	]
-	
+
 	/**
 	 * @type {{name: string, symbol: string, factor: number, isFullName: ?boolean}[]}
-	*/
+	 */
 	static DECIMAL_UNITS = [
 		{name: "yocto", symbol: "y", factor: 1e-24},
 		{name: "zapto", symbol: "z", factor: 1e-21},
@@ -41,11 +57,11 @@ class Unit {
 		{name: "deci", symbol: "d", factor: 1e-1},
 		...Unit.BIGGER_DECIMAL_UNITS
 	]
-	
+
 	constructor(value = 1) {
 		this.value = value
 	}
-	
+
 	static generateDerivated(baseUnit, prefixList) {
 		if (! baseUnit.prototype instanceof Unit || baseUnit === Unit) {
 			throw new TypeError(`${baseUnit} must be a subclass of ${Unit}`)
@@ -69,15 +85,15 @@ class Unit {
 		})
 		return output
 	}
-	
+
 	static addToBaseUnits(units) {
 		Object.entries(units).forEach(([key, value]) => {Unit[key] = value})
 	}
-	
+
 	static addConversion(unit, convert, factor = convert) {
 		this.CONVERSION.set(unit, {convert, factor})
 	}
-	
+
 	static multiply(unit, name = null, symbol = null) {
 		const components = [
 			...[...this.COMPONENTS, ...unit.COMPONENTS]
@@ -89,8 +105,8 @@ class Unit {
 					}
 					return acc
 				}, new Map())
-					.entries()
-			].filter(([unit, count]) => count !== 0)
+				.entries()
+		].filter(([unit, count]) => count !== 0)
 			.reduce((acc, [unit, count]) => {
 				if(count > 0) {
 					for(let i = 0; i < count; i++) {
@@ -103,7 +119,7 @@ class Unit {
 				}
 				return acc
 			},[])
-			
+
 		for (let i = 0; i < components.length; i++) {
 			for (let j = i; j < components.length; j++) {
 				if (components[i].unit !== components[j].unit &&
@@ -113,7 +129,7 @@ class Unit {
 				}
 			}
 		}
-	
+
 		symbol = symbol ?? name ?? [
 			...components
 				.reduce((acc,comp) => {
@@ -138,13 +154,13 @@ class Unit {
 		}
 		return tmp[name]
 	}
-	
+
 	static divide(unit, name = null, symbol = null) {
 		const newComponents = unit.COMPONENTS.map(comp => ({ unit: comp.unit, divide: ! comp.divising }))
-			
+
 		return this.multiply(class extends Unit {static COMPONENTS = newComponents}, name, symbol)
 	}
-	
+
 	static pow(power = 2, name = null, symbol = null) {
 		const newComponents = []
 		for (let i = 0; i < power - 1; i++) {
@@ -152,7 +168,7 @@ class Unit {
 		}
 		return this.multiply(class extends Unit {static COMPONENTS = newComponents}, name, symbol)
 	}
-	
+
 	static get expandedConversionList() {
 		const toVisit = [{unit: this, path: []}]
 		const visited = []
@@ -165,39 +181,67 @@ class Unit {
 				.forEach(conversionTarget => toVisit.push({unit: conversionTarget, path: [...current.path, conversionTarget]}))
 		}
 		return visited
-	}	
-	
+	}
+
 	static canConvertTo(targetedUnit) {
 		return this.expandedConversionList.map(conversionPath => conversionPath.unit).includes(targetedUnit)
 	}
-	
+
 	static conversionPathTo(targetedUnit) {
 		return this.expandedConversionList.find(conversionPath => conversionPath.unit === targetedUnit)?.path
 	}
-	
+
+	/**
+	 * @param {Object} from a subclass of Unit
+	 * @param {Object} to a subclass of Unit
+	 */
+	static #conversionComponentsPairs(from, to) {
+		try {
+			const toComponents = [...to.COMPONENTS]
+			return {
+				divide: false,
+				pairs: from.COMPONENTS.reduce((pairs, origin) => {
+					const targetIndex = toComponents.findIndex(comp => comp.divide === origin.divide && comp.unit.canConvertTo(origin.unit))
+					if (targetIndex === -1) {
+						throw new TypeError(`No conversion known between ${from.name} and ${to.name}`)
+					}
+					const target = toComponents.splice(targetIndex, 1)[0]
+					pairs.push({origin, target})
+					return pairs
+				}, [])
+			}
+		} catch (e) {
+			const toComponents = [...to.COMPONENTS]
+			return {
+				divide: true,
+				pairs: from.COMPONENTS.reduce((pairs, origin) => {
+					const targetIndex = toComponents.findIndex(comp => comp.divide !== origin.divide && comp.unit.canConvertTo(origin.unit))
+					if (targetIndex === -1) {
+						throw new TypeError(`No conversion known between ${from.name} and ${to.name}`)
+					}
+					const target = toComponents.splice(targetIndex, 1)[0]
+					pairs.push({origin, target})
+					return pairs
+				}, [])
+			}
+		}
+	}
+
 	toString() {
 		return `${this.value}${this.constructor.symbol}`
 	}
-	
+
 	to(targetedUnit) {
 		if (this.constructor.COMPONENTS.length !== targetedUnit.COMPONENTS.length) {
 			throw new TypeError(`No conversion known between ${this.constructor.name} and ${targetedUnit.name}`)
 		}
-		
+
 		// 1) find pairs
-		const targetComponents = [...targetedUnit.COMPONENTS]
-		const pairs = this.constructor.COMPONENTS.reduce((pairs, origin) => {
-			const targetIndex = targetComponents.findIndex(comp => comp.divide === origin.divide && comp.unit.canConvertTo(origin.unit))
-			if (targetIndex === -1) {
-				throw new TypeError(`No conversion known between ${this.constructor.name} and ${targetedUnit.name}`)
-			}
-			const target = targetComponents.splice(targetIndex, 1)[0]
-			pairs.push({origin, target})
-			return pairs
-		}, [])
+		const pairs = Unit.#conversionComponentsPairs(this.constructor, targetedUnit)
+
 		// 3) calculate factor
 		let baseValue = this.value
-		pairs.forEach(({origin, target}) => {
+		pairs.pairs.forEach(({origin, target}) => {
 			let compValue = 1
 			origin.unit.conversionPathTo(target.unit).reduce((current, intermediate) => {
 				compValue = current.CONVERSION.get(intermediate).factor(compValue)
@@ -210,6 +254,7 @@ class Unit {
 			}
 		})
 		// 4) create new TargetUnit(value * factor)
-		return new targetedUnit(baseValue)
+		const finalValue = pairs.divide ? 1 / baseValue : baseValue
+		return new targetedUnit(finalValue)
 	}
 }

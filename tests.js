@@ -1,4 +1,8 @@
+import Unit from "./Unit.js"
 const expect = chai.expect
+
+await Unit.registerSIBaseUnits()
+await Unit.registerSIDerivedUnits()
 
 /*
 describe("constants exists", () => {
@@ -49,42 +53,42 @@ describe("base units exists", () => {
 				expect(Unit.meter.COMPONENTS).to.deep.equals([{unit: Unit.meter}])
 			})
 		})
-		
+
 		describe("mass", () => {
 			it("gram", () => {
 				expect(Unit.gram).to.exists
 				expect(Unit.gram.COMPONENTS).to.deep.equals([{unit: Unit.gram}])
 			})
 		})
-		
+
 		describe("electric current", () => {
 			it("ampere", () => {
 				expect(Unit.ampere).to.exists
 				expect(Unit.ampere.COMPONENTS).to.deep.equals([{unit: Unit.ampere}])
 			})
 		})
-		
+
 		describe("amount of substance", () => {
 			it("mole", () => {
 				expect(Unit.mole).to.exists
 				expect(Unit.mole.COMPONENTS).to.deep.equals([{unit: Unit.mole}])
 			})
 		})
-		
+
 		describe("luminous intensity", () => {
 			it("candela", () => {
 				expect(Unit.candela).to.exists
 				expect(Unit.candela.COMPONENTS).to.deep.equals([{unit: Unit.candela}])
 			})
 		})
-		
+
 		describe("time", () => {
 			it("second", () => {
 				expect(Unit.second).to.exists
 				expect(Unit.second.COMPONENTS).to.deep.equals([{unit: Unit.second}])
 			})
 		})
-		
+
 		describe("temperature", () => {
 			it("K", () => {
 				expect(Unit.kelvin).to.exists
@@ -101,7 +105,7 @@ describe("base units exists", () => {
 				expect(Unit.yard.canConvertTo(Unit.meter)).to.be.true
 			})
 		})
-		
+
 		describe("time", () => {
 			it("minute", () => {
 				expect(Unit.min).to.not.exists
@@ -124,7 +128,7 @@ describe("base units exists", () => {
 				expect(Unit.week.canConvertTo(Unit.second)).to.be.true
 			})
 		})
-		
+
 		describe("temperature", () => {
 			it("°F", () => {
 				expect(Unit["°F"]).to.not.exists
@@ -151,7 +155,7 @@ describe("derivated units", () => {
 		expect(derivated.mts).to.not.exists
 		expect(derivated.Megatest).to.exists
 		expect(derivated.Mts).to.not.exists
-		
+
 		expect(derivated.tat).to.exists
 		expect(derivated.ta).to.not.exists
 		expect(derivated.tattest).to.not.exists
@@ -185,7 +189,7 @@ describe("derivated units", () => {
 		expect(derivated.centitest).to.exists
 		expect(derivated.dts).to.not.exists
 		expect(derivated.decitest).to.exists
-		
+
 		expect(derivated.dats).to.not.exists
 		expect(derivated.decatest).to.exists
 		expect(derivated.hts).to.not.exists
@@ -207,7 +211,7 @@ describe("derivated units", () => {
 		expect(derivated.Yts).to.not.exists
 		expect(derivated.yottatest).to.exists
 	})
-	/*
+
 	describe("SI named Units", () => {
 		// https://en.wikipedia.org/wiki/SI_derived_unit
 		it("hertz", () => {
@@ -231,9 +235,9 @@ describe("derivated units", () => {
 			expect(Unit.N).to.not.exists
 			expect(Unit.newton).to.exists
 			expect(Unit.newton.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true}
 			])
 		})
@@ -241,9 +245,9 @@ describe("derivated units", () => {
 			expect(Unit.Pa).to.not.exists
 			expect(Unit.pascal).to.exists
 			expect(Unit.pascal.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter, divide: true}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter, divide: true},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true}
 			])
 		})
@@ -251,10 +255,10 @@ describe("derivated units", () => {
 			expect(Unit.J).to.not.exists
 			expect(Unit.joule).to.exists
 			expect(Unit.joule.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true}
 			])
 		})
@@ -262,11 +266,11 @@ describe("derivated units", () => {
 			expect(Unit.W).to.not.exists
 			expect(Unit.watt).to.exists
 			expect(Unit.watt.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true}
 			])
 		})
@@ -274,7 +278,7 @@ describe("derivated units", () => {
 			expect(Unit.C).to.not.exists
 			expect(Unit.coulomb).to.exists
 			expect(Unit.coulomb.COMPONENTS).to.have.deep.members([
-				{unit: Unit.ampere}, 
+				{unit: Unit.ampere},
 				{unit: Unit.second}
 			])
 		})
@@ -282,11 +286,11 @@ describe("derivated units", () => {
 			expect(Unit.V).to.not.exists
 			expect(Unit.volt).to.exists
 			expect(Unit.volt.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 				{unit: Unit.ampere, divide: true}
 			])
@@ -295,15 +299,15 @@ describe("derivated units", () => {
 			expect(Unit.F).to.not.exists
 			expect(Unit.farad).to.exists
 			expect(Unit.farad.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram, divide: true}, 
-				{unit: Unit.meter, divide: true}, 
-				{unit: Unit.meter, divide: true}, 
+				{unit: Unit.kilogram, divide: true},
+				{unit: Unit.meter, divide: true},
+				{unit: Unit.meter, divide: true},
 
-				{unit: Unit.second}, 
-				{unit: Unit.second}, 
-				{unit: Unit.second}, 
 				{unit: Unit.second},
-				
+				{unit: Unit.second},
+				{unit: Unit.second},
+				{unit: Unit.second},
+
 				{unit: Unit.ampere},
 				{unit: Unit.ampere}
 			])
@@ -312,11 +316,11 @@ describe("derivated units", () => {
 			expect(Unit["Ω"]).to.not.exists
 			expect(Unit.ohm).to.exists
 			expect(Unit.ohm.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 				{unit: Unit.ampere, divide: true},
 				{unit: Unit.ampere, divide: true}
@@ -326,11 +330,11 @@ describe("derivated units", () => {
 			expect(Unit.S).to.not.exists
 			expect(Unit.siemens).to.exists
 			expect(Unit.siemens.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram, divide: true}, 
-				{unit: Unit.meter, divide: true}, 
-				{unit: Unit.meter, divide: true}, 
-				{unit: Unit.second}, 
-				{unit: Unit.second}, 
+				{unit: Unit.kilogram, divide: true},
+				{unit: Unit.meter, divide: true},
+				{unit: Unit.meter, divide: true},
+				{unit: Unit.second},
+				{unit: Unit.second},
 				{unit: Unit.second},
 				{unit: Unit.ampere},
 				{unit: Unit.ampere}
@@ -340,10 +344,10 @@ describe("derivated units", () => {
 			expect(Unit.Wb).to.not.exists
 			expect(Unit.weber).to.exists
 			expect(Unit.weber.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 				{unit: Unit.ampere, divide: true}
 			])
@@ -353,7 +357,7 @@ describe("derivated units", () => {
 			expect(Unit.tesla).to.exists
 			expect(Unit.tesla.COMPONENTS).to.have.deep.members([
 				{unit: Unit.kilogram},
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 				{unit: Unit.ampere, divide: true}
 			])
@@ -362,10 +366,10 @@ describe("derivated units", () => {
 			expect(Unit.H).to.not.exists
 			expect(Unit.henry).to.exists
 			expect(Unit.henry.COMPONENTS).to.have.deep.members([
-				{unit: Unit.kilogram}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.kilogram},
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 				{unit: Unit.ampere, divide: true},
 				{unit: Unit.ampere, divide: true}
@@ -388,9 +392,9 @@ describe("derivated units", () => {
 			expect(Unit.lx).to.not.exists
 			expect(Unit.lux).to.exists
 			expect(Unit.lux.COMPONENTS).to.have.deep.members([
-				{unit: Unit.candela}, 
-				{unit: Unit.meter, divide: true}, 
-				{unit: Unit.meter, divide: true}, 
+				{unit: Unit.candela},
+				{unit: Unit.meter, divide: true},
+				{unit: Unit.meter, divide: true},
 			])
 		})
 		it("becquerel", () => {
@@ -404,9 +408,9 @@ describe("derivated units", () => {
 			expect(Unit.Gy).to.not.exists
 			expect(Unit.gray).to.exists
 			expect(Unit.gray.COMPONENTS).to.have.deep.members([
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 			])
 		})
@@ -414,9 +418,9 @@ describe("derivated units", () => {
 			expect(Unit.Sv).to.not.exists
 			expect(Unit.sievert).to.exists
 			expect(Unit.sievert.COMPONENTS).to.have.deep.members([
-				{unit: Unit.meter}, 
-				{unit: Unit.meter}, 
-				{unit: Unit.second, divide: true}, 
+				{unit: Unit.meter},
+				{unit: Unit.meter},
+				{unit: Unit.second, divide: true},
 				{unit: Unit.second, divide: true},
 			])
 		})
@@ -424,12 +428,11 @@ describe("derivated units", () => {
 			expect(Unit.kat).to.not.exists
 			expect(Unit.katal).to.exists
 			expect(Unit.katal.COMPONENTS).to.have.deep.members([
-				{unit: Unit.mole}, 
+				{unit: Unit.mole},
 				{unit: Unit.second, divide: true},
 			])
 		})
 	})
-	*/
 })
 
 describe("compound units", () => {
@@ -453,7 +456,7 @@ describe("compound units", () => {
 			})
 		})
 	})
-		
+
 	describe("power", () => {
 		describe("on base units", () => {
 			it("can create m3", () => {
@@ -477,7 +480,7 @@ describe("compound units", () => {
 			})
 		})
 	})
-	
+
 	describe("division", () => {
 		describe("between base units", () => {
 			it("can create km/h", () => {
@@ -498,11 +501,11 @@ describe("compound units", () => {
 			})
 		})
 	})
-	
+
 	it("snap to knows units if snap param is true", () => {
 		expect.fail("unit snapping is NYI ")
 	})
-	
+
 	it("can't compound if compatible unit already in components", () => {
 		expect(() => Unit.meter.multiply(Unit.kilometer)).to.throw(TypeError)
 	})
@@ -517,21 +520,21 @@ describe("conversion", () => {
 		const asKm = asCm.to(Unit.kilometer)
 		expect(asKm.value).to.equals(0.0001)
 	})
-	
+
 	it("between unit and 1/unit (hertz <-> second)", () => {
 		const frequency = new Unit.hertz()
 		expect(frequency.to(Unit.second).value).to.be.closeTo(1, 0.0001)
 		const time = new Unit.second(100)
 		expect(time.to(Unit.hertz).value).to.be.closeTo(0.01, 0.0001)
 	})
-	
+
 	it("between compatible units", () => {
 		const distance = new Unit.meter(1)
 		expect(distance.to(Unit.yard).value).to.closeTo(1.09361, 0.0001)
 		const distance2 = new Unit.centimeter(1)
 		expect(distance2.to(Unit.inch).value).to.closeTo(0.393701, 0.0001)
 	})
-	
+
 	describe("between compound units", () => {
 		it("fails if components quantity are not compatible", () => {
 			const m3 = Unit.meter.pow(3)
@@ -539,14 +542,14 @@ describe("conversion", () => {
 			const volume = new m3(42)
 			expect(() => volume.to(m2)).to.throw(TypeError)
 		})
-		
+
 		it("fails if components are not compatible", () => {
 			const m2 = Unit.meter.pow(2)
 			const s2 = Unit.second.pow(2)
 			const area = new m2(42)
 			expect(() => area.to(s2)).to.throw(TypeError)
 		})
-	
+
 		it("can convert m3 to dm3", () => {
 			const m3 = Unit.meter.pow(3)
 			const dm3 = Unit.decimeter.pow(3)
@@ -555,7 +558,7 @@ describe("conversion", () => {
 			expect(converted.value).to.closeTo(42000, 0.0001)
 			expect(converted).to.be.an.instanceof(dm3)
 		})
-		
+
 		it("can convert km/h to m/s", () => {
 			const kmPerH = Unit.kilometer.divide(Unit.hour)
 			const mPerS = Unit.meter.divide(Unit.second)
@@ -564,7 +567,7 @@ describe("conversion", () => {
 			expect(converted.value).to.closeTo(11.6667, 0.0001)
 			expect(converted).to.be.an.instanceof(mPerS)
 		})
-		
+
 		it("can convert °C/h to °F/h", () => {
 			const CpH = Unit.celsius.divide(Unit.hour)
 			const FpH = Unit.fahrenheit.divide(Unit.hour)
@@ -573,12 +576,28 @@ describe("conversion", () => {
 			expect(converted.value).to.closeTo(1.8, 0.0001)
 			expect(converted).to.be.an.instanceof(FpH)
 		})
-	
+
 		it("between unit and 1/unit (m/s <-> s/m)", () => {
 			const mPerS = Unit.meter.divide(Unit.second)
 			const sPerM = Unit.second.divide(Unit.meter)
 			expect((new mPerS(1)).to(sPerM).value).to.be.closeTo(1, 0.0001)
 			expect((new sPerM(100)).to(mPerS).value).to.be.closeTo(0.01, 0.0001)
+		})
+
+		it("can convert km/h to s/m", () => {
+			const kmPerH = Unit.kilometer.divide(Unit.hour)
+			const sPerM = Unit.second.divide(Unit.meter)
+			const speed = new kmPerH(42)
+			const converted = speed.to(sPerM)
+			expect(converted.value).to.closeTo(0.0857, 0.0001)
+			expect(converted).to.be.an.instanceof(sPerM)
+		})
+
+		it("can't convert km/h to m.s", () => {
+			const kmPerH = Unit.kilometer.divide(Unit.hour)
+			const sPerM = Unit.second.multiply(Unit.meter)
+			const speed = new kmPerH(42)
+			expect(() => speed.to(sPerM)).to.throw(TypeError)
 		})
 		// TODO add more tests https://hextobinary.com/unit/
 	})
