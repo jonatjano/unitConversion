@@ -1,8 +1,8 @@
 import Unit from "./Unit.js"
 const expect = chai.expect
 
-await Unit.registerSIBaseUnits()
-await Unit.registerSIDerivedUnits()
+await Unit.loadSIBaseUnits()
+await Unit.loadSIDerivedUnits()
 
 /*
 describe("constants exists", () => {

@@ -1,18 +1,47 @@
+/**
+ * @typedef {Object} DerivedUnitSpecification
+ * @property {string} name
+ * @property {string} symbol
+ * @property {number} factor
+ * @property {boolean} [isFullName]
+ */
+
+/**
+ * @typedef {Object} UnitComponent
+ * @property {typeof Unit} unit
+ * @property {boolean} [divide]
+ */
+
 export default class Unit {
+	/**
+	 * @param {string} subModuleName
+	 * @return {URL}
+	 */
 	static #getSubModuleUrl(subModuleName) {
 		const url = new URL(import.meta.url)
 		url.pathname = `/${subModuleName}.js`
 		return url
 	}
-	static registerUnitFromModule(modulePath) {
-		return import(modulePath)
-			.then(module => module.default(Unit))
+
+	/**
+	 * @param {string | URL} modulePath
+	 * @return {Promise<void>}
+	 */
+	static loadUnitFromModule(modulePath) {
+		return import(modulePath).then(({default: newUnits}) => Unit.registerUnits(newUnits))
 	}
-	static registerSIBaseUnits() {
-		return this.registerUnitFromModule(this.#getSubModuleUrl("SIBaseUnits"))
+
+	/**
+	 * @return {Promise<void>}
+	 */
+	static loadSIBaseUnits() {
+		return this.loadUnitFromModule(this.#getSubModuleUrl("SIBaseUnits"))
 	}
-	static registerSIDerivedUnits() {
-		return this.registerUnitFromModule(this.#getSubModuleUrl("SIDerivedUnits"))
+	/**
+	 * @return {Promise<void>}
+	 */
+	static loadSIDerivedUnits() {
+		return this.loadUnitFromModule(this.#getSubModuleUrl("SIDerivedUnits"))
 	}
 
 	/**
@@ -20,14 +49,17 @@ export default class Unit {
 	 */
 	value = 1
 	/**
-	 * @type {Array<{unit: class extends Unit, ?dividing: boolean}>}
+	 * @type {UnitComponent[]}
 	 */
 	static COMPONENTS = []
 	/**
-	 * @type {Map<class extends Unit, number => number>}
+	 * @type {Map<typeof Unit, {convert: (number) => number, factor: (number) => number}>}
 	 */
 	static CONVERSION
 
+	/**
+	 * @type {DerivedUnitSpecification[]}
+	 */
 	static BIGGER_DECIMAL_UNITS = [
 		{name: "deca", symbol: "da", factor: 1e1},
 		{name: "hecto", symbol: "h", factor: 1e2},
@@ -42,7 +74,7 @@ export default class Unit {
 	]
 
 	/**
-	 * @type {{name: string, symbol: string, factor: number, isFullName: ?boolean}[]}
+	 * @type {DerivedUnitSpecification[]}
 	 */
 	static DECIMAL_UNITS = [
 		{name: "yocto", symbol: "y", factor: 1e-24},
@@ -58,10 +90,19 @@ export default class Unit {
 		...Unit.BIGGER_DECIMAL_UNITS
 	]
 
+	/**
+	 * @param {number} value
+	 */
 	constructor(value = 1) {
 		this.value = value
 	}
 
+	/**
+	 * generate new units based on the new unit using the provided derived unit specifications
+	 * @param {typeof Unit} baseUnit
+	 * @param {DerivedUnitSpecification[]} prefixList
+	 * @return {Array<typeof Unit>} the newly created units
+	 */
 	static generateDerivated(baseUnit, prefixList) {
 		if (! baseUnit.prototype instanceof Unit || baseUnit === Unit) {
 			throw new TypeError(`${baseUnit} must be a subclass of ${Unit}`)
@@ -86,15 +127,37 @@ export default class Unit {
 		return output
 	}
 
-	static addToBaseUnits(units) {
+	/**
+	 * add units as attribute of Unit for easy access (optional doesn't change how they work)
+	 * @param {{[key: string]: typeof Unit}} units
+	 */
+	static registerUnits(units) {
 		Object.entries(units).forEach(([key, value]) => {Unit[key] = value})
 	}
 
+	/**
+	 * add a conversion from this unit to the targeted one
+	 * @param {typeof Unit} unit target unit of the conversion
+	 * @param {(number) => number} convert conversion function used when converting from between the two units themselves
+	 * @param {(number) => number} [factor=convert] conversion function used when converting between units compounded of the two units
+	 *
+	 * @example
+	 * Unit.celsius.addConversion(Unit.fahrenheit, x => (x * 9 / 5) + 32, x => x * 9 / 5)
+	 * // convert param does the full conversion with the addition,
+	 * // while factor only does the multiplication part
+	 */
 	static addConversion(unit, convert, factor = convert) {
 		this.CONVERSION.set(unit, {convert, factor})
 	}
 
-	static multiply(unit, name = null, symbol = null) {
+	/**
+	 * create a new Unit by multiplying current unit with the given one
+	 * @param {typeof Unit} unit
+	 * @param {string} [name] name of the new unit
+	 * @param {string} [symbol] symbol the new unit, if unset will be generated using symbols of components
+	 * @return {typeof Unit} the newly created unit
+	 */
+	static multiply(unit, name = undefined, symbol = undefined) {
 		const components = [
 			...[...this.COMPONENTS, ...unit.COMPONENTS]
 				.reduce((acc,comp) => {
@@ -130,6 +193,7 @@ export default class Unit {
 			}
 		}
 
+		// TODO why is this not used ? why is name never override if not set ?
 		symbol = symbol ?? name ?? [
 			...components
 				.reduce((acc,comp) => {
@@ -155,13 +219,27 @@ export default class Unit {
 		return tmp[name]
 	}
 
-	static divide(unit, name = null, symbol = null) {
+	/**
+	 * divide the unit by another unit
+	 * @param {typeof Unit} unit
+	 * @param {string} [name] same as name param from {@link Unit#multiply}
+	 * @param {string} [symbol] same as symbol param from {@link Unit#multiply}
+	 * @return {typeof Unit} the newly created unit
+	 */
+	static divide(unit, name = undefined, symbol = undefined) {
 		const newComponents = unit.COMPONENTS.map(comp => ({ unit: comp.unit, divide: ! comp.divising }))
 
-		return this.multiply(class extends Unit {static COMPONENTS = newComponents}, name, symbol)
+ 		return this.multiply(class extends Unit {static COMPONENTS = newComponents}, name, symbol)
 	}
 
-	static pow(power = 2, name = null, symbol = null) {
+	/**
+	 * elevate current unit to the specifier power
+	 * @param {number} power
+	 * @param {string} [name] same as name param from {@link Unit#multiply}
+	 * @param {string} [symbol] same as symbol param from {@link Unit#multiply}
+	 * @return {typeof Unit} the newly created unit
+	 */
+	static pow(power = 2, name = undefined, symbol = undefined) {
 		const newComponents = []
 		for (let i = 0; i < power - 1; i++) {
 			newComponents.push(...this.COMPONENTS)
@@ -169,6 +247,12 @@ export default class Unit {
 		return this.multiply(class extends Unit {static COMPONENTS = newComponents}, name, symbol)
 	}
 
+	/**
+	 * find the list of Unit you can convert current unit to, using this.CONVERSION
+	 * @see Unit#addConversion
+	 * @deprecated doesn't work for compound conversion nor derivated unit conversion
+	 * @return {{unit: typeof Unit, path: Array<typeof Unit>}[]}
+	 */
 	static get expandedConversionList() {
 		const toVisit = [{unit: this, path: []}]
 		const visited = []
@@ -183,23 +267,38 @@ export default class Unit {
 		return visited
 	}
 
+	/**
+	 * test if unit can be converted to targetedUnit using {@link Unit#expandedConversionList}
+	 * @deprecated doesn't work for compound conversion nor derivated unit conversion
+	 * @param {typeof Unit} targetedUnit
+	 * @return {boolean}
+	 */
 	static canConvertTo(targetedUnit) {
 		return this.expandedConversionList.map(conversionPath => conversionPath.unit).includes(targetedUnit)
 	}
 
+	/**
+	 * return conversion steps from current unit to targetedUnit using {@link Unit#expandedConversionList}
+	 * @deprecated doesn't work for compound conversion nor derivated unit conversion
+	 * @param {typeof Unit} targetedUnit
+	 * @return {Array<typeof Unit>}
+	 */
 	static conversionPathTo(targetedUnit) {
 		return this.expandedConversionList.find(conversionPath => conversionPath.unit === targetedUnit)?.path
 	}
 
 	/**
+	 * find convertible pairs between components of units
 	 * @param {Object} from a subclass of Unit
 	 * @param {Object} to a subclass of Unit
+	 * @throws {TypeError} if no conversion is possible
+	 * @return {{opposite: boolean, pairs: {origin: UnitComponent, target: UnitComponent }[]}} the pair list and if the target unit is opposite of the source
 	 */
 	static #conversionComponentsPairs(from, to) {
 		try {
 			const toComponents = [...to.COMPONENTS]
 			return {
-				divide: false,
+				opposite: false,
 				pairs: from.COMPONENTS.reduce((pairs, origin) => {
 					const targetIndex = toComponents.findIndex(comp => comp.divide === origin.divide && comp.unit.canConvertTo(origin.unit))
 					if (targetIndex === -1) {
@@ -213,7 +312,7 @@ export default class Unit {
 		} catch (e) {
 			const toComponents = [...to.COMPONENTS]
 			return {
-				divide: true,
+				opposite: true,
 				pairs: from.COMPONENTS.reduce((pairs, origin) => {
 					const targetIndex = toComponents.findIndex(comp => comp.divide !== origin.divide && comp.unit.canConvertTo(origin.unit))
 					if (targetIndex === -1) {
@@ -227,10 +326,18 @@ export default class Unit {
 		}
 	}
 
+	/**
+	 * @return {string}
+	 */
 	toString() {
 		return `${this.value}${this.constructor.symbol}`
 	}
 
+	/**
+	 * convert the value to another unit
+	 * @param {typeof Unit} targetedUnit
+	 * @return {Unit}
+	 */
 	to(targetedUnit) {
 		if (this.constructor.COMPONENTS.length !== targetedUnit.COMPONENTS.length) {
 			throw new TypeError(`No conversion known between ${this.constructor.name} and ${targetedUnit.name}`)
@@ -254,7 +361,7 @@ export default class Unit {
 			}
 		})
 		// 4) create new TargetUnit(value * factor)
-		const finalValue = pairs.divide ? 1 / baseValue : baseValue
+		const finalValue = pairs.opposite ? 1 / baseValue : baseValue
 		return new targetedUnit(finalValue)
 	}
 }
